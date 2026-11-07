@@ -4,6 +4,7 @@ from agent.tools.geo import calcular_distancia
 from agent.tools.geocoding import geocodificar_endereco
 from agent.tools.arrival import buscar_parada_proxima_com_previsao
 from agent.tools.favoritos import salvar_linha_favorita, remover_linha_favorita, listar_linhas_favoritas
+from agent.tools.rag import buscar_linhas_por_destino
 
 TOOLS = [
     {
@@ -121,6 +122,20 @@ TOOLS = [
             "required": [],
         },
     },
+    {
+        "name": "buscar_linhas_por_destino",
+        "description": "Busca linhas de ônibus na base estática GTFS pelo nome do destino ou trecho. Use quando o usuário não sabe o número da linha e pergunta 'tem ônibus que vai para X?' ou 'qual linha passa pela Y?'.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "destino": {
+                    "type": "string",
+                    "description": "Nome do destino, bairro ou ponto de referência. Ex: 'Paulista', 'Metrô Consolação', 'Pinheiros'",
+                }
+            },
+            "required": ["destino"],
+        },
+    },
 ]
 
 
@@ -143,6 +158,8 @@ def executar_ferramenta(nome: str, args: dict) -> str:
         resultado = remover_linha_favorita(args["numero_linha"])
     elif nome == "listar_linhas_favoritas":
         resultado = listar_linhas_favoritas()
+    elif nome == "buscar_linhas_por_destino":
+        resultado = buscar_linhas_por_destino(args["destino"])
     else:
         resultado = {"erro": f"Ferramenta desconhecida: {nome}"}
 
