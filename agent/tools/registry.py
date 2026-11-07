@@ -3,6 +3,7 @@ from pipeline.api.sptrans_client import buscar_linhas, buscar_veiculos_por_linha
 from agent.tools.geo import calcular_distancia
 from agent.tools.geocoding import geocodificar_endereco
 from agent.tools.arrival import buscar_parada_proxima_com_previsao
+from agent.tools.favoritos import salvar_linha_favorita, remover_linha_favorita, listar_linhas_favoritas
 
 TOOLS = [
     {
@@ -83,6 +84,43 @@ TOOLS = [
             "required": ["lat1", "lon1", "lat2", "lon2"],
         },
     },
+    {
+        "name": "salvar_linha_favorita",
+        "description": "Salva uma linha de ônibus nos favoritos do usuário para consultas futuras.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "numero_linha": {
+                    "type": "string",
+                    "description": "Número da linha. Ex: '5178', '8012'",
+                }
+            },
+            "required": ["numero_linha"],
+        },
+    },
+    {
+        "name": "remover_linha_favorita",
+        "description": "Remove uma linha de ônibus dos favoritos do usuário.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "numero_linha": {
+                    "type": "string",
+                    "description": "Número da linha a remover. Ex: '5178'",
+                }
+            },
+            "required": ["numero_linha"],
+        },
+    },
+    {
+        "name": "listar_linhas_favoritas",
+        "description": "Lista todas as linhas de ônibus salvas nos favoritos do usuário.",
+        "input_schema": {
+            "type": "object",
+            "properties": {},
+            "required": [],
+        },
+    },
 ]
 
 
@@ -99,6 +137,12 @@ def executar_ferramenta(nome: str, args: dict) -> str:
         resultado = buscar_veiculos_por_linha(args["codigo_linha"])
     elif nome == "calcular_distancia":
         resultado = calcular_distancia(args["lat1"], args["lon1"], args["lat2"], args["lon2"])
+    elif nome == "salvar_linha_favorita":
+        resultado = salvar_linha_favorita(args["numero_linha"])
+    elif nome == "remover_linha_favorita":
+        resultado = remover_linha_favorita(args["numero_linha"])
+    elif nome == "listar_linhas_favoritas":
+        resultado = listar_linhas_favoritas()
     else:
         resultado = {"erro": f"Ferramenta desconhecida: {nome}"}
 
