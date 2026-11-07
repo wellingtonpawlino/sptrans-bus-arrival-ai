@@ -1,17 +1,32 @@
 import json
 from pipeline.api.sptrans_client import buscar_linhas, buscar_veiculos_por_linha
 from agent.tools.geo import calcular_distancia
+from agent.tools.geocoding import geocodificar_endereco
 
 TOOLS = [
     {
+        "name": "geocodificar_endereco",
+        "description": "Converte um endereço em coordenadas geográficas (latitude e longitude). Use sempre que o usuário informar sua localização por texto.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "endereco": {
+                    "type": "string",
+                    "description": "Endereço completo ou parcial. Ex: 'Av. Paulista, 1000', 'Metrô Vila Madalena', 'Rua Augusta'",
+                }
+            },
+            "required": ["endereco"],
+        },
+    },
+    {
         "name": "buscar_linhas",
-        "description": "Busca linhas de ônibus pelo número, nome de rua ou bairro. Retorna código, letreiro, origem e destino.",
+        "description": "Busca linhas de ônibus pelo número. Retorna código, letreiro, origem e destino.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "termo": {
                     "type": "string",
-                    "description": "Número da linha, nome de rua ou bairro. Ex: '8012', 'Faria Lima', 'Paulista'",
+                    "description": "Número da linha. Ex: '5178', '8012'",
                 }
             },
             "required": ["termo"],
@@ -49,7 +64,9 @@ TOOLS = [
 
 
 def executar_ferramenta(nome: str, args: dict) -> str:
-    if nome == "buscar_linhas":
+    if nome == "geocodificar_endereco":
+        resultado = geocodificar_endereco(args["endereco"])
+    elif nome == "buscar_linhas":
         resultado = buscar_linhas(args["termo"])
     elif nome == "buscar_veiculos_por_linha":
         resultado = buscar_veiculos_por_linha(args["codigo_linha"])
