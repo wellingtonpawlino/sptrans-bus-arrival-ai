@@ -10,6 +10,17 @@ def buscar_linhas(termo: str) -> list[dict]:
         return []
 
     linhas = response.json() or []
+
+    # Se o termo tiver sufixo de tipo (ex: "5119-10"), filtra pelo tl correspondente
+    tl_filtro = None
+    if "-" in termo:
+        partes = termo.rsplit("-", 1)
+        if partes[1].isdigit():
+            tl_filtro = int(partes[1])
+
+    if tl_filtro is not None:
+        linhas = [l for l in linhas if l.get("tl") == tl_filtro]
+
     return [
         {
             "codigo_linha": l["cl"],
