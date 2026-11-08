@@ -341,21 +341,23 @@ async def _send_arrival(update: Update, selected: dict, lat: float, lon: float):
         return
 
     acessivel = " ♿" if result.get("acessivel") else ""
+    nome_parada = result.get("parada") or "Parada próxima"
+    maps_url = (
+        f"https://www.google.com/maps/dir/{lat},{lon}/"
+        f"{result['parada_lat']},{result['parada_lon']}"
+    )
     msg = (
         f"🚌 *Linha {selected['numero_linha']} → {selected['destino']}*\n\n"
-        f"📍 {result['parada']}\n"
+        f"📍 {nome_parada}\n"
         f"📏 {result['distancia_metros_ate_parada']}m de você\n"
         f"🕐 Chegada: *{result['previsao_chegada']}*\n"
         f"🔢 Veículo {result['prefixo_veiculo']}{acessivel}"
     )
+    keyboard.insert(0, [InlineKeyboardButton("🗺️ Ver no mapa", url=maps_url)])
     await update.message.reply_text(
         msg,
         parse_mode="Markdown",
         reply_markup=InlineKeyboardMarkup(keyboard),
-    )
-    await update.message.reply_location(
-        latitude=result["parada_lat"],
-        longitude=result["parada_lon"],
     )
 
 
