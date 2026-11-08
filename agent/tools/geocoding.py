@@ -4,7 +4,7 @@ def geocodificar_endereco(endereco: str) -> dict:
     headers = {"User-Agent": "sptrans-bus-arrival-ai/1.0"}
     response = requests.get(
         "https://nominatim.openstreetmap.org/search",
-        params={"q": f"{endereco}, São Paulo, Brasil", "format": "json", "limit": 1},
+        params={"q": f"{endereco}, Brasil", "format": "json", "limit": 1},
         headers=headers,
         timeout=10,
     )
