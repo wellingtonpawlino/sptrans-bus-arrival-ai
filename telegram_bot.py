@@ -285,31 +285,53 @@ async def _ask_location(query, chat_id: int):
 # ── Busca de previsão ─────────────────────────────────────────────────────────
 
 async def _fetch_arrival_text(update: Update, chat_id: int, location_text: str):
-    selected = _state.pop(chat_id, {}).get("selected")
+    state = _state.get(chat_id, {})
+    selected = state.get("selected")
     if not selected:
+        await update.message.reply_text("Sessão expirada. Use o menu para começar.", reply_markup=_MENU)
+        _state.pop(chat_id, None)
         return
+    _state.pop(chat_id, None)
     await update.message.chat.send_action("typing")
-    loc = geocodificar_endereco(location_text)
+    try:
+        loc = geocodificar_endereco(location_text)
+    except Exception:
+        await update.message.reply_text("Erro ao buscar o endereço. Tente novamente.", reply_markup=_MENU)
+        return
     if "erro" in loc:
-        await update.message.reply_text("Não encontrei esse endereço. Tente de outra forma.")
+        await update.message.reply_text(
+            "Não encontrei esse endereço. Tente de outra forma.",
+        )
         _state[chat_id] = {"step": "get_location", "selected": selected}
         return
     await _send_arrival(update, selected, loc["latitude"], loc["longitude"])
 
 
 async def _fetch_arrival_coords(update: Update, chat_id: int, lat: float, lon: float):
-    selected = _state.pop(chat_id, {}).get("selected")
+    state = _state.get(chat_id, {})
+    selected = state.get("selected")
     if not selected:
+        await update.message.reply_text("Sessão expirada. Use o menu para começar.", reply_markup=_MENU)
+        _state.pop(chat_id, None)
         return
+    _state.pop(chat_id, None)
     await update.message.chat.send_action("typing")
     await _send_arrival(update, selected, lat, lon)
 
 
 async def _send_arrival(update: Update, selected: dict, lat: float, lon: float):
-    result = buscar_parada_proxima_com_previsao(selected["codigo_linha"], lat, lon)
-
-    keyboard = [[InlineKeyboardButton("🔄 Consultar novamente", callback_data="meu_onibus_again")],
-                [InlineKeyboardButton("◀️ Menu", callback_data="menu_principal")]]
+    keyboard = [
+        [InlineKeyboardButton("🔄 Consultar novamente", callback_data="meu_onibus_again")],
+        [InlineKeyboardButton("◀️ Menu", callback_data="menu_principal")],
+    ]
+    try:
+        result = buscar_parada_proxima_com_previsao(selected["codigo_linha"], lat, lon)
+    except Exception:
+        await update.message.reply_text(
+            "Erro ao consultar a API SPTrans. Tente em alguns instantes.",
+            reply_markup=InlineKeyboardMarkup(keyboard),
+        )
+        return
 
     if "erro" in result:
         await update.message.reply_text(
@@ -325,9 +347,6 @@ async def _send_arrival(update: Update, selected: dict, lat: float, lon: float):
         f"📏 {result['distancia_metros_ate_parada']}m de você\n"
         f"🕐 Chegada: *{result['previsao_chegada']}*\n"
         f"🔢 Veículo {result['prefixo_veiculo']}{acessivel}"
-    )
-    await update.message.reply_text(
-        "​", reply_markup=ReplyKeyboardRemove()
     )
     await update.message.reply_text(
         msg,
