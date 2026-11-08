@@ -29,6 +29,7 @@ from pipeline.api.sptrans_client import buscar_linhas
 
 _state: dict[int, dict] = {}
 _history: dict[int, list] = defaultdict(list)
+_last_selected: dict[int, dict] = {}
 
 _MENU = InlineKeyboardMarkup([
     [InlineKeyboardButton("🚌 Meu ônibus", callback_data="meu_onibus")],
@@ -54,7 +55,9 @@ def _inline_voltar(callback="menu_principal"):
 
 
 async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    _state.pop(update.effective_chat.id, None)
+    chat_id = update.effective_chat.id
+    _state.pop(chat_id, None)
+    _history.pop(chat_id, None)
     await update.message.reply_text(
         "Olá! Sou o *SPTrans Assistant*.\n"
         "Te ajudo a saber quando seu ônibus está chegando.",
@@ -130,8 +133,15 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
 
     # Fluxo meu ônibus
-    elif data in ("meu_onibus", "meu_onibus_again"):
+    elif data == "meu_onibus":
         await _start_flow(query, chat_id)
+    elif data == "meu_onibus_again":
+        last = _last_selected.get(chat_id)
+        if last:
+            _state[chat_id] = {"step": "ask_location", "selected": last}
+            await _ask_location(query, chat_id)
+        else:
+            await _start_flow(query, chat_id)
     elif data.startswith("line:"):
         await _select_line(query, chat_id, data.split(":", 1)[1])
     elif data.startswith("dir:"):
@@ -292,6 +302,7 @@ async def _fetch_arrival_text(update: Update, chat_id: int, location_text: str):
         _state.pop(chat_id, None)
         return
     _state.pop(chat_id, None)
+    _last_selected[chat_id] = selected
     await update.message.chat.send_action("typing")
     try:
         loc = geocodificar_endereco(location_text)
@@ -315,6 +326,7 @@ async def _fetch_arrival_coords(update: Update, chat_id: int, lat: float, lon: f
         _state.pop(chat_id, None)
         return
     _state.pop(chat_id, None)
+    _last_selected[chat_id] = selected
     await update.message.chat.send_action("typing")
     await _send_arrival(update, selected, lat, lon)
 
