@@ -114,7 +114,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # Favoritos
     elif data == "fav_listar":
-        await _cb_listar(query)
+        await _cb_listar(query, chat_id)
     elif data == "fav_salvar":
         _state[chat_id] = {"step": "salvar_aguarda_numero"}
         await query.edit_message_text(
@@ -158,8 +158,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ── Favoritos ─────────────────────────────────────────────────────────────────
 
-async def _cb_listar(query):
-    result = listar_linhas_favoritas()
+async def _cb_listar(query, chat_id: int):
+    result = listar_linhas_favoritas(str(chat_id))
     favoritos = result.get("favoritos", [])
     if not favoritos:
         await query.edit_message_text(
@@ -190,7 +190,7 @@ async def _salvar_linha(update: Update, chat_id: int, numero: str):
 
     salvos = []
     for l in linhas:
-        salvar_linha_favorita(l["letreiro"], l["codigo_linha"], l["destino"])
+        salvar_linha_favorita(l["letreiro"], l["codigo_linha"], l["destino"], str(chat_id))
         salvos.append(f"• sentido {l['destino']}")
 
     confirmacao = "\n".join(salvos)
@@ -203,7 +203,7 @@ async def _salvar_linha(update: Update, chat_id: int, numero: str):
 
 async def _remover_linha(update: Update, chat_id: int, numero: str):
     _state.pop(chat_id, None)
-    result = remover_linha_favorita(numero.strip())
+    result = remover_linha_favorita(numero.strip(), str(chat_id))
     await update.message.reply_text(
         result.get("mensagem", "Feito."),
         reply_markup=_MENU_FAVORITOS,
@@ -213,7 +213,7 @@ async def _remover_linha(update: Update, chat_id: int, numero: str):
 # ── Fluxo meu ônibus ──────────────────────────────────────────────────────────
 
 async def _start_flow(query, chat_id: int):
-    result = listar_linhas_favoritas()
+    result = listar_linhas_favoritas(str(chat_id))
     favoritos = result.get("favoritos", [])
     if not favoritos:
         await query.edit_message_text(
