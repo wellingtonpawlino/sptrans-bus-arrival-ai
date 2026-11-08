@@ -332,6 +332,7 @@ async def _fetch_arrival_coords(update: Update, chat_id: int, lat: float, lon: f
 
 
 async def _send_arrival(update: Update, selected: dict, lat: float, lon: float):
+    from datetime import datetime, timezone, timedelta
     keyboard = [
         [InlineKeyboardButton("🔄 Consultar novamente", callback_data="meu_onibus_again")],
         [InlineKeyboardButton("◀️ Menu", callback_data="menu_principal")],
@@ -357,12 +358,14 @@ async def _send_arrival(update: Update, selected: dict, lat: float, lon: float):
     maps_url = (
         f"https://www.google.com/maps?q={result['parada_lat']},{result['parada_lon']}"
     )
+    agora = datetime.now(timezone(timedelta(hours=-3))).strftime("%H:%M:%S")
     msg = (
         f"🚌 *Linha {selected['numero_linha']} → {selected['destino']}*\n\n"
         f"📍 {nome_parada}\n"
         f"📏 {result['distancia_metros_ate_parada']}m de você\n"
         f"🕐 Chegada: *{result['previsao_chegada']}*\n"
-        f"🔢 Veículo {result['prefixo_veiculo']}{acessivel}"
+        f"🔢 Veículo {result['prefixo_veiculo']}{acessivel}\n\n"
+        f"_Consultado às {agora}_"
     )
     keyboard.insert(0, [InlineKeyboardButton("🗺️ Ver no mapa", url=maps_url)])
     await update.message.reply_text(
