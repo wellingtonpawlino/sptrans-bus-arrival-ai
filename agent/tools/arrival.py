@@ -32,6 +32,8 @@ def buscar_parada_proxima_com_previsao(codigo_linha: int, lat: float, lon: float
     veiculo = melhor["veiculos"][0]
     return {
         "parada": melhor["nome_parada"],
+        "parada_lat": melhor["latitude"],
+        "parada_lon": melhor["longitude"],
         "distancia_metros_ate_parada": round(melhor_distancia),
         "previsao_chegada": veiculo["previsao_chegada"],
         "prefixo_veiculo": veiculo["prefixo"],
