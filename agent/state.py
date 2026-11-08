@@ -4,3 +4,4 @@ import operator
 
 class AgentState(TypedDict):
     messages: Annotated[list, operator.add]
+    intent: str

@@ -4,7 +4,7 @@ _graph = build_graph()
 
 
 def chat(messages: list[dict]) -> str:
-    result = _graph.invoke({"messages": messages})
+    result = _graph.invoke({"messages": messages, "intent": ""})
     last = result["messages"][-1]
     content = last.get("content", [])
     if isinstance(content, list):

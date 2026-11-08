@@ -170,6 +170,23 @@ TOOLS = [
 ]
 
 
+_TOOL_NAMES = {t["name"]: t for t in TOOLS}
+
+MOBILITY_TOOLS = [_TOOL_NAMES[n] for n in [
+    "geocodificar_endereco", "buscar_linhas", "buscar_parada_proxima_com_previsao",
+    "buscar_veiculos_por_linha", "calcular_distancia", "buscar_favoritas_proximas",
+    "listar_linhas_favoritas",
+]]
+
+FAVORITES_TOOLS = [_TOOL_NAMES[n] for n in [
+    "buscar_linhas", "salvar_linha_favorita", "remover_linha_favorita", "listar_linhas_favoritas",
+]]
+
+DISCOVERY_TOOLS = [_TOOL_NAMES[n] for n in [
+    "buscar_linhas_por_destino", "geocodificar_endereco", "buscar_parada_proxima_com_previsao",
+]]
+
+
 def executar_ferramenta(nome: str, args: dict) -> str:
     if nome == "geocodificar_endereco":
         resultado = geocodificar_endereco(args["endereco"])

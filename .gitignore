@@ -5,3 +5,4 @@ __pycache__/
 venv/
 favoritos.json
 pipeline/data/gtfs/*.txt
+.claude/
