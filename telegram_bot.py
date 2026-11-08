@@ -343,8 +343,7 @@ async def _send_arrival(update: Update, selected: dict, lat: float, lon: float):
     acessivel = " ♿" if result.get("acessivel") else ""
     nome_parada = result.get("parada") or "Parada próxima"
     maps_url = (
-        f"https://www.google.com/maps/dir/{lat},{lon}/"
-        f"{result['parada_lat']},{result['parada_lon']}"
+        f"https://www.google.com/maps?q={result['parada_lat']},{result['parada_lon']}"
     )
     msg = (
         f"🚌 *Linha {selected['numero_linha']} → {selected['destino']}*\n\n"
