@@ -2,15 +2,22 @@
 RAG (Retrieval-Augmented Generation) com base vetorial de rotas GTFS.
 
 Conceito:
-  1. Indexação — cada rota vira um documento de texto; TF-IDF converte em vetor esparso
+  1. Indexação — cada rota vira um documento enriquecido com paradas do percurso;
+                 TF-IDF converte em vetor esparso
   2. Consulta   — a query do usuário também vira vetor; cosine similarity mede relevância
   3. Augmentação — os documentos mais relevantes são retornados para o LLM usar como contexto
+
+Melhoria em relação ao índice simples:
+  O índice original usava apenas o nome da rota (ex: "Term. Pinheiros - Metrô Santana").
+  Destinos como "Metrô Brigadeiro" não aparecem em nomes de rota.
+  Agora o documento de cada rota inclui os nomes das paradas que ficam ao longo do percurso,
+  permitindo buscas por ponto intermediário.
 """
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-from pipeline.data.gtfs_loader import carregar_rotas
+from pipeline.data.gtfs_loader import carregar_rotas, carregar_paradas_por_rota
 
 _vectorizer: TfidfVectorizer | None = None
 _matrix = None
@@ -23,14 +30,17 @@ def _build_index() -> None:
         return
 
     rotas = carregar_rotas()
-    _docs = [
-        {
-            "texto": f"Linha {r['nome_curto']}: {r['nome_longo']}",
+    paradas_por_rota = carregar_paradas_por_rota()
+
+    _docs = []
+    for r in rotas:
+        paradas = paradas_por_rota.get(r["route_id"], [])
+        paradas_texto = " ".join(paradas[:20])  # limita para não inflar o vetor
+        _docs.append({
+            "texto": f"Linha {r['nome_curto']}: {r['nome_longo']} {paradas_texto}",
             "linha": r["nome_curto"],
             "descricao": r["nome_longo"],
-        }
-        for r in rotas
-    ]
+        })
 
     textos = [d["texto"] for d in _docs]
     # char_wb com ngrams captura variações de acento e abreviações (Term., Metrô, etc.)

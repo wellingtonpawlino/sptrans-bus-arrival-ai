@@ -14,8 +14,9 @@ def buscar_linhas(termo: str) -> list[dict]:
         {
             "codigo_linha": l["cl"],
             "letreiro": l["lt"],
-            "origem": l["tp"],
-            "destino": l["ts"],
+            # sl=1: tp→ts, sl=2: ts→tp
+            "origem": l["tp"] if l["sl"] == 1 else l["ts"],
+            "destino": l["ts"] if l["sl"] == 1 else l["tp"],
             "sentido": l["sl"],
         }
         for l in linhas

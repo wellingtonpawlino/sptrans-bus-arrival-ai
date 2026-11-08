@@ -3,7 +3,12 @@ from pipeline.api.sptrans_client import buscar_linhas, buscar_veiculos_por_linha
 from agent.tools.geo import calcular_distancia
 from agent.tools.geocoding import geocodificar_endereco
 from agent.tools.arrival import buscar_parada_proxima_com_previsao
-from agent.tools.favoritos import salvar_linha_favorita, remover_linha_favorita, listar_linhas_favoritas
+from agent.tools.favoritos import (
+    salvar_linha_favorita,
+    remover_linha_favorita,
+    listar_linhas_favoritas,
+    buscar_favoritas_proximas,
+)
 from agent.tools.rag import buscar_linhas_por_destino
 
 TOOLS = [
@@ -87,16 +92,24 @@ TOOLS = [
     },
     {
         "name": "salvar_linha_favorita",
-        "description": "Salva uma linha de ônibus nos favoritos do usuário para consultas futuras.",
+        "description": "Salva uma linha de ônibus com sentido específico nos favoritos do usuário. Sempre chame buscar_linhas antes para obter o codigo_linha e destino corretos.",
         "input_schema": {
             "type": "object",
             "properties": {
                 "numero_linha": {
                     "type": "string",
                     "description": "Número da linha. Ex: '5178', '8012'",
-                }
+                },
+                "codigo_linha": {
+                    "type": "integer",
+                    "description": "Código identificador único da linha por sentido, obtido via buscar_linhas",
+                },
+                "destino": {
+                    "type": "string",
+                    "description": "Terminal de destino da linha neste sentido, obtido via buscar_linhas. Ex: 'TERMINAL LAPA', 'PCA.RAMOS DE AZEVEDO'",
+                },
             },
-            "required": ["numero_linha"],
+            "required": ["numero_linha", "codigo_linha", "destino"],
         },
     },
     {
@@ -120,6 +133,24 @@ TOOLS = [
             "type": "object",
             "properties": {},
             "required": [],
+        },
+    },
+    {
+        "name": "buscar_favoritas_proximas",
+        "description": "Busca previsão de chegada de todas as linhas favoritas do usuário em paralelo e retorna um ranking por horário de chegada. Use quando o usuário perguntar 'meu ônibus está chegando?' e tiver favoritos salvos.",
+        "input_schema": {
+            "type": "object",
+            "properties": {
+                "lat": {
+                    "type": "number",
+                    "description": "Latitude do usuário, obtida via geocodificar_endereco",
+                },
+                "lon": {
+                    "type": "number",
+                    "description": "Longitude do usuário, obtida via geocodificar_endereco",
+                },
+            },
+            "required": ["lat", "lon"],
         },
     },
     {
@@ -153,7 +184,9 @@ def executar_ferramenta(nome: str, args: dict) -> str:
     elif nome == "calcular_distancia":
         resultado = calcular_distancia(args["lat1"], args["lon1"], args["lat2"], args["lon2"])
     elif nome == "salvar_linha_favorita":
-        resultado = salvar_linha_favorita(args["numero_linha"])
+        resultado = salvar_linha_favorita(args["numero_linha"], args["codigo_linha"], args["destino"])
+    elif nome == "buscar_favoritas_proximas":
+        resultado = buscar_favoritas_proximas(args["lat"], args["lon"])
     elif nome == "remover_linha_favorita":
         resultado = remover_linha_favorita(args["numero_linha"])
     elif nome == "listar_linhas_favoritas":
