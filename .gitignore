@@ -6,3 +6,4 @@ venv/
 favoritos.json
 pipeline/data/gtfs/*.txt
 .claude/
+estudo_projeto.txt
